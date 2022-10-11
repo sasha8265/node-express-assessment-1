@@ -11,8 +11,29 @@ fs.readFile(readFile, 'utf8', function (err, data) {
         process.kill(1);
     }
     urlArr = data.toString().split('\n')
-    console.log(urlArr);
-    return urlArr;
+
+    async function writeFiles(urlArr) {
+        const promises = urlArr.map((url) =>
+            axios.get(url)
+                .then((response) => response.data)
+                .catch(e => console.log('Invalid URL'))
+        );
+
+        const data = await Promise.all(promises);
+        console.log(data);
+        return data;
+    }
+    writeFiles(urlArr);
+    // fs.appendFile(path, data, 'utf8', err => {
+    // if (err) {
+    //     console.log("ERROR!!!", err)
+    //     process.kill(1)
+    // }
+    // console.log("IT WORKED!")
+    // })
+
+    // console.log(urlArr);
+    // return urlArr;
 });
 
 
