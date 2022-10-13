@@ -22,14 +22,14 @@ app.post('/', async function(req, res, next) {
         //wait for requests to finish and handle all promises in array
         let results = await Promise.all(promisesArr);
         
-        //create new array with results
+        //create new array with result data
         let out = results.map(r => ({
             name: r.data.name,
             bio: r.data.bio
         }));
 
+        //return data as json
         return res.json(out)
-        // return res.send(JSON.stringify(out));
     } catch(err) {
         next(err);
     }
@@ -44,14 +44,14 @@ app.use(function (req, res, next) {
 
 /** general error handler */
 
-app.use((err, req, res, next) => {
-    let status = err.status || 500;
+// app.use((err, req, res, next) => {
+//     let status = err.status || 500;
 
-    return res.status(status).json({
-        error: err.message,
-        status
-    });
-});
+//     return res.status(status).json({
+//         error: err.message,
+//         status
+//     });
+// });
 
 app.listen(3000, function () {
     console.log('App on port 3000');
