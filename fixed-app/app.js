@@ -3,18 +3,58 @@ const axios = require('axios');
 const app = express();
 const ExpressError = require("./expressError")
 
+app.use(express.json());
 
-app.post('/', function(req, res, next) {
-  try {
-    let results = req.body.developers.map(async d => {
-      return await axios.get(`https://api.github.com/users/${d}`);
-    });
-    let out = results.map(r => ({ name: r.data.name, bio: r.data.bio }));
+/**
+* POST /
+* Given a list of GitHub users names, return information about those developers:
+* Given JSON body like {developers: [username, ...]}
+* Return [ {name, bio}, ... ]
+*/
 
-    return res.send(JSON.stringify(out));
-  } catch {
-    next(err);
-  }
+app.post('/', async function(req, res, next) {
+    try {
+        //Create array of promises from github with given usernames
+        let promisesArr = req.body.developers.map(async dev => {
+            return await axios.get(`https://api.github.com/users/${dev}`);
+        });
+        
+        //wait for requests to finish and handle all promises in array
+        let results = await Promise.all(promisesArr);
+        
+        //create new array with results
+        let out = results.map(r => ({
+            name: r.data.name,
+            bio: r.data.bio
+        }));
+
+        return res.json(out)
+        // return res.send(JSON.stringify(out));
+    } catch(err) {
+        next(err);
+    }
 });
 
-app.listen(3000);
+/** 404 handler */
+
+app.use(function (req, res, next) {
+    const err = new ExpressError("Not Found", 404);
+    return next(err)
+});
+
+/** general error handler */
+
+app.use((err, req, res, next) => {
+    let status = err.status || 500;
+
+    return res.status(status).json({
+        error: err.message,
+        status
+    });
+});
+
+app.listen(3000, function () {
+    console.log('App on port 3000');
+})
+
+module.exports = app;
